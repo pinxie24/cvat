@@ -8,7 +8,13 @@
 
 ## Create VKE cluster
 1. $env:KUBECONFIG = "C:\Users\pinox\Desktop\pinxie\projects\vke\kube.conf"  # powershell setup kube env.
+1. export KUBECONFIG=~/Desktop/pinxie/projects/vke/kube.conf # bash setup kube env.
 2. kubectl get node
 3. 1. kubectl create secret docker-registry volc-registry-secret --docker-server=cr-demo-cn-shanghai.cr.volces.com --docker-username=<your-name> --docker-password=<your-password> --namespace=default
-4. helm package ./helm-chart
-4. helm install cvat-poc ./helm-chart --namespace cvat --values values.override.yaml
+
+# Package cvat chart package for volcengine
+1. helm registry login cr-demo-cn-shanghai.cr.volces.com
+2. helm package ./helm-chart
+3. helm push cvat-0.14.3-valc1.tgz oci://cr-demo-cn-shanghai.cr.volces.com/cvat
+4. helm install -f ./helm-chart/values.yaml -f ./helm-chart/values.override.yaml cvat-poc oci://cr-demo-cn-shanghai.cr.volces.com/cvat/cvat
+

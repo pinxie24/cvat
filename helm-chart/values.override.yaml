@@ -17,6 +17,9 @@ postgresql:
   persistence:
     storageClass: "ebs-ssd"
     size: 10Gi
+    accessModes:
+      - ReadWriteOnce
+    annotations: {}
   resources:
     requests:
       cpu: "250m"
@@ -28,6 +31,7 @@ postgresql:
     password: "cvat_postgresql"
     postgres_password: "cvat_postgresql_postgres"
     replication_password: "cvat_postgresql_replica"
+
 
 # Ingress configuration
 ingress:
@@ -55,18 +59,22 @@ cvat:
       tag: "v2.31.0"
     resources:
       requests:
-        cpu: "500m"
+        cpu: "250m"
         memory: "800Mi"
       limits:
-        cpu: "1000m"
+        cpu: "500m"
         memory: "1Gi"
-    defaultStorage:
+    persistence:
       enabled: true
       size: 10Gi
       storageClass: "ebs-ssd"
+      accessModes:
+        - ReadWriteOnce
+      annotations: {}
     envs:
       ALLOWED_HOSTS: "cvat.poc.example.com"
       CSRF_TRUSTED_ORIGINS: "http://cvat.poc.example.com,https://cvat.poc.example.com"
+
   ui:
     image:
       repository: "cr-demo-cn-shanghai.cr.volces.com/cvat/cvat-ui"
@@ -79,6 +87,45 @@ cvat:
         cpu: "300m"
         memory: "500Mi"
 
+  # Worker configurations
+  worker:
+    chunks:
+      replicas: 1
+      resources:
+        requests:
+          cpu: "100m"
+          memory: "200Mi"
+        limits:
+          cpu: "300m"
+          memory: "500Mi"
+    consensus:
+      replicas: 1
+      resources:
+        requests:
+          cpu: "100m"
+          memory: "200Mi"
+        limits:
+          cpu: "300m"
+          memory: "500Mi"
+    export:
+      replicas: 1
+      resources:
+        requests:
+          cpu: "100m"
+          memory: "200Mi"
+        limits:
+          cpu: "300m"
+          memory: "500Mi"
+    import:
+      replicas: 1
+      resources:
+        requests:
+          cpu: "100m"
+          memory: "200Mi"
+        limits:
+          cpu: "300m"
+          memory: "500Mi"
+
 # Redis configuration
 redis:
   enabled: true
@@ -90,6 +137,9 @@ redis:
   persistence:
     storageClass: "ebs-ssd"
     size: 5Gi
+    accessModes:
+      - ReadWriteOnce
+    annotations: {}
   resources:
     requests:
       cpu: "100m"
@@ -100,6 +150,7 @@ redis:
   auth:
     enabled: true
     password: "cvat_redis"
+
 
 # Disable optional components
 nuclio:
@@ -122,6 +173,13 @@ clickhouse:
     registry: cr-demo-cn-shanghai.cr.volces.com
     repository: cvat/clickhouse
     tag: "23.12.2-debian-11-r0"
+  persistence:
+    storageClass: "ebs-ssd"
+    size: 10Gi
+    accessModes:
+      - ReadWriteOnce
+    annotations: {}
+
 
 grafana:
   image:
@@ -137,6 +195,13 @@ kvrocks:
   image:
     repository: cr-demo-cn-shanghai.cr.volces.com/cvat/kvrocks
     tag: "2.7.0"
+  persistence:
+    storageClass: "ebs-ssd"
+    size: 5Gi
+    accessModes:
+      - ReadWriteOnce
+    annotations: {}
+
 
 bats:
   image:
