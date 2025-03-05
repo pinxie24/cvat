@@ -1,105 +1,144 @@
-# PostgreSQL 配置
-postgresql:
-  secret:
-    password: "<your_postgresql_password>"
-    postgres_password: "<your_postgres_password>"
-    replication_password: "<your_replication_password>"
+# Global image registry configuration
+global:
   image:
-    registry: ${REGISTRY}
-    repository: ${NAMESPACE}/postgresql
-    tag: "15.2.0-debian-11-r0"
+    registry: "cr-demo-cn-shanghai.cr.volces.com"
+    namespace: "cvat"
+  # Configure image pull secrets for private registry
+  imagePullSecrets:
+    - name: "volc-registry-secret"
 
-# 配置 Ingress
+# PostgreSQL configuration
+postgresql:
+  enabled: true
+  image:
+    registry: "cr-demo-cn-shanghai.cr.volces.com"
+    repository: "cvat/postgresql"
+    tag: "15.2.0-debian-11-r0"
+  persistence:
+    storageClass: "ebs-ssd"
+    size: 10Gi
+  resources:
+    requests:
+      cpu: "250m"
+      memory: "256Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+  secret:
+    password: "cvat_postgresql"
+    postgres_password: "cvat_postgresql_postgres"
+    replication_password: "cvat_postgresql_replica"
+
+# Ingress configuration
 ingress:
   enabled: true
   annotations:
     kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/proxy-body-size: "0"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
   hosts:
-    - host: cvat.<your-domain>.com
+    - host: cvat.poc.example.com
       paths:
         - path: /
           pathType: Prefix
+  tls:
+    - secretName: cvat-tls-secret
+      hosts:
+        - cvat.poc.example.com
 
-# 存储配置
+# Storage configuration
 cvat:
   backend:
     image:
-      repository: ${REGISTRY}/${NAMESPACE}/cvat-server
-      tag: "dev"
+      repository: "cr-demo-cn-shanghai.cr.volces.com/cvat/cvat-server"
+      tag: "v2.31.0"
+    resources:
+      requests:
+        cpu: "500m"
+        memory: "800Mi"
+      limits:
+        cpu: "1000m"
+        memory: "1Gi"
     defaultStorage:
       enabled: true
-      size: 100Gi
-      storageClass: "volc-nas-storage" # 使用火山引擎提供的存储类
+      size: 10Gi
+      storageClass: "ebs-ssd"
+    envs:
+      ALLOWED_HOSTS: "cvat.poc.example.com"
+      CSRF_TRUSTED_ORIGINS: "http://cvat.poc.example.com,https://cvat.poc.example.com"
   ui:
     image:
-      repository: ${REGISTRY}/${NAMESPACE}/cvat-ui
-      tag: "dev"
+      repository: "cr-demo-cn-shanghai.cr.volces.com/cvat/cvat-ui"
+      tag: "v2.31.0"
+    resources:
+      requests:
+        cpu: "100m"
+        memory: "200Mi"
+      limits:
+        cpu: "300m"
+        memory: "500Mi"
 
-# Redis 配置
+# Redis configuration
 redis:
+  enabled: true
   architecture: standalone
+  image:
+    registry: "cr-demo-cn-shanghai.cr.volces.com"
+    repository: "cvat/redis"
+    tag: "7.2.3-debian-11-r1"
+  persistence:
+    storageClass: "ebs-ssd"
+    size: 5Gi
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "128Mi"
+    limits:
+      cpu: "200m"
+      memory: "256Mi"
   auth:
     enabled: true
-    password: "<your_redis_password>"
-  image:
-    registry: ${REGISTRY}
-    repository: ${NAMESPACE}/redis
-    tag: "7.2.3-debian-11-r1"
+    password: "cvat_redis"
 
-# 添加全局镜像仓库配置
-global:
-  image:
-    registry: "cr-cn-shanghai.volces.com"
-    namespace: "your-namespace"
-
-# 其他组件的镜像配置类似...
-
-# 如果需要 AI 功能，添加 Nuclio 配置
+# Disable optional components
 nuclio:
-  dashboard:
-    image:
-      repository: ${REGISTRY}/${NAMESPACE}/nuclio-dashboard
-      tag: "0.19.0"
-  controller:
-    image:
-      repository: ${REGISTRY}/${NAMESPACE}/nuclio-controller
-      tag: "0.19.0"
+  enabled: false
 
-# 如果需要监控功能，添加以下配置
+analytics:
+  enabled: false
+
+traefik:
+  enabled: false
+
+# Other component configurations
 vector:
   image:
-    repository: ${REGISTRY}/${NAMESPACE}/vector
+    repository: cr-demo-cn-shanghai.cr.volces.com/cvat/vector
     tag: "0.26.0-alpine"
 
 clickhouse:
   image:
-    registry: ${REGISTRY}
-    repository: ${NAMESPACE}/clickhouse
+    registry: cr-demo-cn-shanghai.cr.volces.com
+    repository: cvat/clickhouse
     tag: "23.12.2-debian-11-r0"
 
 grafana:
   image:
-    repository: ${REGISTRY}/${NAMESPACE}/grafana
+    repository: cr-demo-cn-shanghai.cr.volces.com/cvat/grafana
     tag: "10.1.5"
 
-traefik:
-  image:
-    repository: ${REGISTRY}/${NAMESPACE}/traefik
-    tag: "v2.10.7"
-
-# CVAT 核心组件配置
 opa:
   image:
-    repository: ${REGISTRY}/${NAMESPACE}/opa
+    repository: cr-demo-cn-shanghai.cr.volces.com/cvat/opa
     tag: "0.63.0"
 
-# 其他组件配置
 kvrocks:
   image:
-    repository: ${REGISTRY}/${NAMESPACE}/kvrocks
+    repository: cr-demo-cn-shanghai.cr.volces.com/cvat/kvrocks
     tag: "2.7.0"
 
 bats:
   image:
-    repository: ${REGISTRY}/${NAMESPACE}/bats
+    repository: cr-demo-cn-shanghai.cr.volces.com/cvat/bats
     tag: "v1.4.1"
