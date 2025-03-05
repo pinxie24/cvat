@@ -1,0 +1,105 @@
+# PostgreSQL 配置
+postgresql:
+  secret:
+    password: "<your_postgresql_password>"
+    postgres_password: "<your_postgres_password>"
+    replication_password: "<your_replication_password>"
+  image:
+    registry: ${REGISTRY}
+    repository: ${NAMESPACE}/postgresql
+    tag: "15.2.0-debian-11-r0"
+
+# 配置 Ingress
+ingress:
+  enabled: true
+  annotations:
+    kubernetes.io/ingress.class: nginx
+  hosts:
+    - host: cvat.<your-domain>.com
+      paths:
+        - path: /
+          pathType: Prefix
+
+# 存储配置
+cvat:
+  backend:
+    image:
+      repository: ${REGISTRY}/${NAMESPACE}/cvat-server
+      tag: "dev"
+    defaultStorage:
+      enabled: true
+      size: 100Gi
+      storageClass: "volc-nas-storage" # 使用火山引擎提供的存储类
+  ui:
+    image:
+      repository: ${REGISTRY}/${NAMESPACE}/cvat-ui
+      tag: "dev"
+
+# Redis 配置
+redis:
+  architecture: standalone
+  auth:
+    enabled: true
+    password: "<your_redis_password>"
+  image:
+    registry: ${REGISTRY}
+    repository: ${NAMESPACE}/redis
+    tag: "7.2.3-debian-11-r1"
+
+# 添加全局镜像仓库配置
+global:
+  image:
+    registry: "cr-cn-shanghai.volces.com"
+    namespace: "your-namespace"
+
+# 其他组件的镜像配置类似...
+
+# 如果需要 AI 功能，添加 Nuclio 配置
+nuclio:
+  dashboard:
+    image:
+      repository: ${REGISTRY}/${NAMESPACE}/nuclio-dashboard
+      tag: "0.19.0"
+  controller:
+    image:
+      repository: ${REGISTRY}/${NAMESPACE}/nuclio-controller
+      tag: "0.19.0"
+
+# 如果需要监控功能，添加以下配置
+vector:
+  image:
+    repository: ${REGISTRY}/${NAMESPACE}/vector
+    tag: "0.26.0-alpine"
+
+clickhouse:
+  image:
+    registry: ${REGISTRY}
+    repository: ${NAMESPACE}/clickhouse
+    tag: "23.12.2-debian-11-r0"
+
+grafana:
+  image:
+    repository: ${REGISTRY}/${NAMESPACE}/grafana
+    tag: "10.1.5"
+
+traefik:
+  image:
+    repository: ${REGISTRY}/${NAMESPACE}/traefik
+    tag: "v2.10.7"
+
+# CVAT 核心组件配置
+opa:
+  image:
+    repository: ${REGISTRY}/${NAMESPACE}/opa
+    tag: "0.63.0"
+
+# 其他组件配置
+kvrocks:
+  image:
+    repository: ${REGISTRY}/${NAMESPACE}/kvrocks
+    tag: "2.7.0"
+
+bats:
+  image:
+    repository: ${REGISTRY}/${NAMESPACE}/bats
+    tag: "v1.4.1"
