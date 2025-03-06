@@ -7,32 +7,6 @@ global:
   imagePullSecrets:
     - name: "volc-registry-secret"
 
-# PostgreSQL configuration
-postgresql:
-  enabled: true
-  image:
-    registry: "cr-demo-cn-shanghai.cr.volces.com"
-    repository: "cvat/postgresql"
-    tag: "15.2.0-debian-11-r0"
-  persistence:
-    storageClass: "ebs-ssd"
-    size: 10Gi
-    accessModes:
-      - ReadWriteOnce
-    annotations: {}
-  resources:
-    requests:
-      cpu: "250m"
-      memory: "256Mi"
-    limits:
-      cpu: "500m"
-      memory: "512Mi"
-  secret:
-    password: "cvat_postgresql"
-    postgres_password: "cvat_postgresql_postgres"
-    replication_password: "cvat_postgresql_replica"
-
-
 # Ingress configuration
 ingress:
   enabled: true
@@ -54,9 +28,7 @@ ingress:
 # Storage configuration
 cvat:
   backend:
-    image:
-      repository: "cr-demo-cn-shanghai.cr.volces.com/cvat/cvat-server"
-      tag: "v2.31.0"
+    image: "cr-demo-cn-shanghai.cr.volces.com/cvat/cvat-server:v2.31.0"
     resources:
       requests:
         cpu: "250m"
@@ -64,21 +36,91 @@ cvat:
       limits:
         cpu: "500m"
         memory: "1Gi"
-    persistence:
+    defaultStorage:
       enabled: true
-      size: 10Gi
-      storageClass: "ebs-ssd"
+      storageClassName: "ebs-ssd"
       accessModes:
         - ReadWriteOnce
+      size: 20Gi
       annotations: {}
     envs:
       ALLOWED_HOSTS: "cvat.poc.example.com"
       CSRF_TRUSTED_ORIGINS: "http://cvat.poc.example.com,https://cvat.poc.example.com"
 
-  ui:
-    image:
-      repository: "cr-demo-cn-shanghai.cr.volces.com/cvat/cvat-ui"
-      tag: "v2.31.0"
+    server:
+      replicas: 1
+      resources:
+        requests:
+          cpu: "100m"
+          memory: "200Mi"
+        limits:
+          cpu: "300m"
+          memory: "500Mi"
+      defaultStorage:
+        enabled: true
+        size: 10Gi
+        storageClass: "ebs-ssd"
+        accessModes:
+          - ReadWriteOnce
+        annotations: {}
+
+      # Worker configurations
+    worker:
+      chunks:
+        replicas: 1
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "200Mi"
+          limits:
+            cpu: "300m"
+            memory: "500Mi"
+        defaultStorage:
+          enabled: true
+          size: 10Gi
+          storageClass: "ebs-ssd"
+          accessModes:
+            - ReadWriteOnce
+          annotations: {}
+      track:
+        replicas: 1
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "200Mi"
+          limits:
+            cpu: "300m"
+            memory: "500Mi"
+      consensus:
+        replicas: 1
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "200Mi"
+          limits:
+            cpu: "300m"
+            memory: "500Mi"
+      export:
+        replicas: 1
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "200Mi"
+          limits:
+            cpu: "300m"
+            memory: "500Mi"
+      import:
+        replicas: 1
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "200Mi"
+          limits:
+            cpu: "300m"
+            memory: "500Mi"
+
+  frontend:
+    image: "cr-demo-cn-shanghai.cr.volces.com/cvat/cvat-ui:v2.31.0"
     resources:
       requests:
         cpu: "100m"
@@ -87,44 +129,46 @@ cvat:
         cpu: "300m"
         memory: "500Mi"
 
-  # Worker configurations
-  worker:
-    chunks:
-      replicas: 1
-      resources:
-        requests:
-          cpu: "100m"
-          memory: "200Mi"
-        limits:
-          cpu: "300m"
-          memory: "500Mi"
-    consensus:
-      replicas: 1
-      resources:
-        requests:
-          cpu: "100m"
-          memory: "200Mi"
-        limits:
-          cpu: "300m"
-          memory: "500Mi"
-    export:
-      replicas: 1
-      resources:
-        requests:
-          cpu: "100m"
-          memory: "200Mi"
-        limits:
-          cpu: "300m"
-          memory: "500Mi"
-    import:
-      replicas: 1
-      resources:
-        requests:
-          cpu: "100m"
-          memory: "200Mi"
-        limits:
-          cpu: "300m"
-          memory: "500Mi"
+  opa:
+    image: "cr-demo-cn-shanghai.cr.volces.com/cvat/opa:0.63.0"
+
+  kvrocks:
+    image: "cr-demo-cn-shanghai.cr.volces.com/cvat/kvrocks:2.7.0"
+    defaultStorage:
+      storageClass: "ebs-ssd"
+      size: 5Gi
+      accessModes:
+        - ReadWriteOnce
+      annotations: {}
+    resources:
+      requests:
+        cpu: "100m"
+        memory: "200Mi"
+      limits:
+        cpu: "300m"
+        memory: "500Mi"
+
+
+# PostgreSQL configuration
+postgresql:
+  enabled: true
+  image:
+    registry: "cr-demo-cn-shanghai.cr.volces.com"
+    repository: "cvat/postgresql"
+    tag: "15.2.0-debian-11-r0"
+  defaultStorage:
+    storageClass: "ebs-ssd"
+    size: 20Gi
+    accessModes:
+      - ReadWriteOnce
+    annotations: {}
+  resources:
+    requests:
+      cpu: "250m"
+      memory: "256Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
 
 # Redis configuration
 redis:
@@ -134,7 +178,7 @@ redis:
     registry: "cr-demo-cn-shanghai.cr.volces.com"
     repository: "cvat/redis"
     tag: "7.2.3-debian-11-r1"
-  persistence:
+  defaultStorage:
     storageClass: "ebs-ssd"
     size: 5Gi
     accessModes:
@@ -168,6 +212,10 @@ vector:
     repository: cr-demo-cn-shanghai.cr.volces.com/cvat/vector
     tag: "0.26.0-alpine"
 
+analytics:
+  # Set clickhouse.enabled to false if you disable analytics or use an external database
+  enabled: false
+
 clickhouse:
   image:
     registry: cr-demo-cn-shanghai.cr.volces.com
@@ -185,22 +233,6 @@ grafana:
   image:
     repository: cr-demo-cn-shanghai.cr.volces.com/cvat/grafana
     tag: "10.1.5"
-
-opa:
-  image:
-    repository: cr-demo-cn-shanghai.cr.volces.com/cvat/opa
-    tag: "0.63.0"
-
-kvrocks:
-  image:
-    repository: cr-demo-cn-shanghai.cr.volces.com/cvat/kvrocks
-    tag: "2.7.0"
-  persistence:
-    storageClass: "ebs-ssd"
-    size: 5Gi
-    accessModes:
-      - ReadWriteOnce
-    annotations: {}
 
 
 bats:
