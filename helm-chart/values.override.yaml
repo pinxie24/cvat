@@ -32,6 +32,9 @@ ingress:
       hosts:
         - cvat.poc.example.com
 
+imagePullSecrets:
+  - name: "volc-registry-secret"
+
 # Storage configuration
 cvat:
   backend:
@@ -134,7 +137,8 @@ cvat:
             memory: "500Mi"
 
   frontend:
-    image: "cr-demo-cn-shanghai.cr.volces.com/cvat/cvat-ui:v2.31.0"
+    image: "cr-demo-cn-shanghai.cr.volces.com/cvat/cvat-ui"
+    tag: v2.31.0
     resources:
       requests:
         cpu: "100m"
@@ -144,10 +148,12 @@ cvat:
         memory: "500Mi"
 
   opa:
-    image: "cr-demo-cn-shanghai.cr.volces.com/cvat/opa:0.63.0"
+    image: "cr-demo-cn-shanghai.cr.volces.com/cvat/opa"
+    tag: 0.63.0
 
   kvrocks:
-    image: "cr-demo-cn-shanghai.cr.volces.com/cvat/kvrocks:2.7.0"
+    image: "cr-demo-cn-shanghai.cr.volces.com/cvat/kvrocks"
+    tag: 2.7.0
     defaultStorage:
       storageClassName: "ebs-ssd"
       size: 20Gi
