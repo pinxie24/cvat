@@ -82,7 +82,7 @@ spec:
       initContainers:
         {{- if .Values.cvat.backend.permissionFix.enabled }}
         - name: user-data-permission-fix
-          image: busybox
+          image: {{ .Values.cvat.backend.initializer.image }}:{{ .Values.cvat.backend.initializer.tag }}
           command: ["/bin/chmod", "-R", "777", "/home/django"]
           {{- with merge $localValues.resources .Values.cvat.backend.resources }}
           resources:
