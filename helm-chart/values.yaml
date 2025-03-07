@@ -380,12 +380,12 @@ nuclio:
 
 analytics:
   # Set clickhouse.enabled to false if you disable analytics or use an external database
-  enabled: true
-  clickhouseDb: cvat
-  clickhouseUser: user
-  clickhousePassword: user
-  clickhouseHost: "{{ .Release.Name }}-clickhouse"
-  clickhousePort: 8123
+  enabled: false
+  # clickhouseDb: cvat
+  # clickhouseUser: user
+  # clickhousePassword: user
+  # clickhouseHost: "{{ .Release.Name }}-clickhouse"
+  # clickhousePort: 8123
 
 vector:
   envFrom:

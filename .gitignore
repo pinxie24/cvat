@@ -66,3 +66,4 @@ cvat-ui/dist
 /cvat/apps/*/rules/*_test.gen.rego
 
 secrets.md
+helm-chart/temp/*

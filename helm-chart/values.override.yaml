@@ -1,8 +1,15 @@
 # Global image registry configuration
 global:
-  image:
-    registry: "cr-demo-cn-shanghai.cr.volces.com"
-    namespace: "cvat"
+  imageRegistry: "cr-demo-cn-shanghai.cr.volces.com"
+  namespace: "cvat"
+  storageClass: "ebs-ssd"
+  postgresql:
+    auth:
+      username: "cvat"
+      password: "cvat_postgres"
+      database: "cvat"
+  redis:
+    password: cvat_redis
   # Configure image pull secrets for private registry
   imagePullSecrets:
     - name: "volc-registry-secret"
@@ -28,7 +35,8 @@ ingress:
 # Storage configuration
 cvat:
   backend:
-    image: "cr-demo-cn-shanghai.cr.volces.com/cvat/cvat-server:v2.31.0"
+    image: "cr-demo-cn-shanghai.cr.volces.com/cvat/cvat-server"
+    tag: "v2.31.0"
     resources:
       requests:
         cpu: "250m"
@@ -43,9 +51,15 @@ cvat:
         - ReadWriteOnce
       size: 20Gi
       annotations: {}
+    permissionFix:
+      enabled: true
     envs:
       ALLOWED_HOSTS: "cvat.poc.example.com"
       CSRF_TRUSTED_ORIGINS: "http://cvat.poc.example.com,https://cvat.poc.example.com"
+
+    initializer:
+      image: "cr-demo-cn-shanghai.cr.volces.com/cvat/busybox"
+      tag: "latest"
 
     server:
       replicas: 1
@@ -58,7 +72,7 @@ cvat:
           memory: "500Mi"
       defaultStorage:
         enabled: true
-        size: 10Gi
+        size: 20Gi
         storageClass: "ebs-ssd"
         accessModes:
           - ReadWriteOnce
@@ -75,9 +89,9 @@ cvat:
           limits:
             cpu: "300m"
             memory: "500Mi"
-        defaultStorage:
+        persistence:
           enabled: true
-          size: 10Gi
+          size: 20Gi
           storageClass: "ebs-ssd"
           accessModes:
             - ReadWriteOnce
@@ -135,8 +149,8 @@ cvat:
   kvrocks:
     image: "cr-demo-cn-shanghai.cr.volces.com/cvat/kvrocks:2.7.0"
     defaultStorage:
-      storageClass: "ebs-ssd"
-      size: 5Gi
+      storageClassName: "ebs-ssd"
+      size: 20Gi
       accessModes:
         - ReadWriteOnce
       annotations: {}
@@ -156,19 +170,21 @@ postgresql:
     registry: "cr-demo-cn-shanghai.cr.volces.com"
     repository: "cvat/postgresql"
     tag: "15.2.0-debian-11-r0"
-  defaultStorage:
-    storageClass: "ebs-ssd"
-    size: 20Gi
-    accessModes:
-      - ReadWriteOnce
-    annotations: {}
-  resources:
-    requests:
-      cpu: "250m"
-      memory: "256Mi"
-    limits:
-      cpu: "500m"
-      memory: "512Mi"
+  primary:
+    persistence:
+      enabled: true
+      storageClass: "ebs-ssd"
+      size: 20Gi
+      accessModes:
+        - ReadWriteOnce
+      annotations: {}
+    resources:
+      requests:
+        cpu: "250m"
+        memory: "256Mi"
+      limits:
+        cpu: "500m"
+        memory: "512Mi"
 
 # Redis configuration
 redis:
@@ -178,12 +194,14 @@ redis:
     registry: "cr-demo-cn-shanghai.cr.volces.com"
     repository: "cvat/redis"
     tag: "7.2.3-debian-11-r1"
-  defaultStorage:
-    storageClass: "ebs-ssd"
-    size: 5Gi
-    accessModes:
-      - ReadWriteOnce
-    annotations: {}
+  master:
+    persistence:
+      enabled: true
+      storageClass: "ebs-ssd"
+      size: 20Gi
+      accessModes:
+        - ReadWriteOnce
+      annotations: {}
   resources:
     requests:
       cpu: "100m"
@@ -200,10 +218,11 @@ redis:
 nuclio:
   enabled: false
 
-analytics:
+traefik:
   enabled: false
 
-traefik:
+analytics:
+  # Set clickhouse.enabled to false if you disable analytics or use an external database
   enabled: false
 
 # Other component configurations
@@ -212,30 +231,42 @@ vector:
     repository: cr-demo-cn-shanghai.cr.volces.com/cvat/vector
     tag: "0.26.0-alpine"
 
-analytics:
-  # Set clickhouse.enabled to false if you disable analytics or use an external database
-  enabled: false
-
 clickhouse:
   image:
-    registry: cr-demo-cn-shanghai.cr.volces.com
-    repository: cvat/clickhouse
+    repository: cr-demo-cn-shanghai.cr.volces.com/cvat/clickhouse
     tag: "23.12.2-debian-11-r0"
+  auth:
+    enabled: true
+    username: "cvat"
+    password: "cvat_clickhouse"
+  initdbScripts:
+    init.sql: |
+      CREATE DATABASE IF NOT EXISTS cvat;
+      CREATE USER IF NOT EXISTS cvat IDENTIFIED WITH sha256_password BY 'cvat_clickhouse';
+      GRANT ALL ON cvat.* TO cvat;
+  initdbSecret: "cvat-clickhouse-init"
+
+  # 添加Secret定义
+  existingSecret: "cvat-clickhouse-init"
+  secret:
+    enabled: true
+    password: "cvat_clickhouse"
+    initdbScripts:
+      init.sql: |
+        CREATE DATABASE IF NOT EXISTS cvat;
+        CREATE USER IF NOT EXISTS cvat IDENTIFIED WITH sha256_password BY 'cvat_clickhouse';
+        GRANT ALL ON cvat.* TO cvat;
   persistence:
     storageClass: "ebs-ssd"
-    size: 10Gi
+    size: 20Gi
     accessModes:
       - ReadWriteOnce
     annotations: {}
 
 
 grafana:
-  image:
-    repository: cr-demo-cn-shanghai.cr.volces.com/cvat/grafana
-    tag: "10.1.5"
+  image: "cr-demo-cn-shanghai.cr.volces.com/cvat/grafana:10.1.5"
 
 
 bats:
-  image:
-    repository: cr-demo-cn-shanghai.cr.volces.com/cvat/bats
-    tag: "v1.4.1"
+  image: "cr-demo-cn-shanghai.cr.volces.com/cvat/bats:v1.4.1"
