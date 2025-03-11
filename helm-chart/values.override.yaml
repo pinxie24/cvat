@@ -3,13 +3,6 @@ global:
   imageRegistry: "cr-demo-cn-shanghai.cr.volces.com"
   namespace: "cvat"
   storageClass: "ebs-ssd"
-  postgresql:
-    auth:
-      username: "cvat"
-      password: "cvat_postgres"
-      database: "cvat"
-  redis:
-    password: cvat_redis
   # Configure image pull secrets for private registry
   imagePullSecrets:
     - name: "volc-registry-secret"
@@ -172,6 +165,11 @@ cvat:
 # PostgreSQL configuration
 postgresql:
   enabled: true
+  secret:
+    password: cvat_postgresql
+    postgres_password: cvat_postgresql_postgres
+    replication_password: cvat_postgresql_replica
+
   image:
     registry: "cr-demo-cn-shanghai.cr.volces.com"
     repository: "cvat/postgresql"
@@ -226,6 +224,10 @@ nuclio:
 
 traefik:
   enabled: false
+  image:
+    registry: cr-demo-cn-shanghai.cr.volces.com
+    repository: cvat/traefik
+    tag: v2.10
 
 analytics:
   # Set clickhouse.enabled to false if you disable analytics or use an external database

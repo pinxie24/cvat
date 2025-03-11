@@ -339,7 +339,7 @@ postgresql:
     port: ""
   # If not external following config will be applied by default
   auth:
-    existingSecret: "{{ .Release.Name }}-postgres-secret"
+    existingSecret: cvat-postgres-secret
     username: cvat
     database: cvat
   service:
@@ -347,7 +347,7 @@ postgresql:
       postgresql: 5432
   secret:
     create: true
-    name: "{{ .Release.Name }}-postgres-secret"
+    name: cvat-postgres-secret
     password: cvat_postgresql
     postgres_password: cvat_postgresql_postgres
     replication_password: cvat_postgresql_replica
@@ -384,7 +384,7 @@ analytics:
   # clickhouseDb: cvat
   # clickhouseUser: user
   # clickhousePassword: user
-  # clickhouseHost: "{{ .Release.Name }}-clickhouse"
+  # clickhouseHost: cvat-clickhouse
   # clickhousePort: 8123
 
 vector:

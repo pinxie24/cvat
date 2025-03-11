@@ -17,5 +17,22 @@
 1. helm registry login cr-demo-cn-shanghai.cr.volces.com
 2. helm package ./helm-chart
 3. helm push cvat-0.14.3-valc2.tgz oci://cr-demo-cn-shanghai.cr.volces.com/cvat
-4. helm install -f ./values.yaml -f ./values.override.yaml cvat-poc --version 0.14.3-valc2 oci://cr-demo-cn-shanghai.cr.volces.com/cvat/cvat
+4. helm install cvat-poc oci://cr-demo-cn-shanghai.cr.volces.com/cvat/cvat --version 0.14.3-valc2 -f ./values.yaml -f ./values.override.yaml
 
+# create CLB to allow public access
+1. VKE - Service - create service
+2. Select LB, and passthrough pod
+3. Create CLB
+4. Set port 80, protocol TCP
+4. Associate with workload, cvat-frontend
+
+# create super user
+
+```
+$env:HELM_RELEASE_NAMESPACE = "default"
+$env:HELM_RELEASE_NAME = "cvat-poc"
+
+$env:BACKEND_POD_NAME = $(kubectl get pod --namespace default -l tier=backend,app.kubernetes.io/instance=cvat-poc,component=server -o jsonpath='{.items[0].metadata.name}')
+
+kubectl exec -it "$env:BACKEND_POD_NAME" -c cvat-backend --namespace "$env:HELM_RELEASE_NAMESPACE" -- python manage.py createsuperuser
+```

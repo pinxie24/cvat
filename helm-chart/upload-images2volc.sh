@@ -94,8 +94,9 @@ fi
 
 # Define image list
 declare -A IMAGES=(
+
+  ["traefik:v2.10"]="${REGISTRY}/${NAMESPACE}/traefik:v2.10"
   ["cvat/server:v2.31.0"]="${REGISTRY}/${NAMESPACE}/cvat-server:v2.31.0"
-#   ["cvat/ui:v2.31.0"]="${REGISTRY}/${NAMESPACE}/cvat-ui:v2.31.0"
   ["docker.io/grafana/grafana:10.1.5"]="${REGISTRY}/${NAMESPACE}/grafana:10.1.5"
   ["docker.io/bitnami/clickhouse:23.12.2-debian-11-r0"]="${REGISTRY}/${NAMESPACE}/#clickhouse:23.12.2-debian-11-r0"
   ["docker.io/bitnami/postgresql:15.2.0-debian-11-r0"]="${REGISTRY}/${NAMESPACE}/postgresql:15.2.0-debian-11-r0"
